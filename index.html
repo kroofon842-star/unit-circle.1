@@ -1,0 +1,476 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>วงกลมหนึ่งหน่วยแบบโต้ตอบ</title>
+  <style>
+    :root{
+      --blue:#cfe7ff;
+      --blue2:#eaf4ff;
+      --text:#17324d;
+      --grid:#d9e2ef;
+      --axis:#4b5b6b;
+      --red:#e53935;
+      --green:#1b8f5a;
+      --gold:#d4a017;
+      --purple:#6a1b9a;
+      --teal:#006d77;
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      font-family: "Segoe UI", Tahoma, sans-serif;
+      background:#f5f8fc;
+      color:var(--text);
+    }
+    .wrap{
+      max-width:1150px;
+      margin:18px auto;
+      padding:16px;
+    }
+    .title{
+      background:linear-gradient(180deg,#d7ebff,#c5e0fb);
+      border-radius:22px;
+      padding:18px 24px;
+      text-align:center;
+      font-size:clamp(24px,2.8vw,42px);
+      font-weight:700;
+      box-shadow:0 4px 10px rgba(0,0,0,.08);
+      margin-bottom:16px;
+    }
+    .title em{font-style:italic;color:#243c97}
+    .layout{
+      display:grid;
+      grid-template-columns: 1.2fr 0.8fr;
+      gap:16px;
+      align-items:start;
+    }
+    .card{
+      background:white;
+      border-radius:20px;
+      box-shadow:0 6px 20px rgba(0,0,0,.07);
+      padding:14px;
+    }
+    #board{
+      width:100%;
+      height:auto;
+      display:block;
+      touch-action:none;
+      user-select:none;
+      -webkit-user-select:none;
+    }
+    .controls{
+      display:grid;
+      grid-template-columns:1fr 1fr 1fr;
+      gap:12px;
+      margin-top:12px;
+      align-items:stretch;
+    }
+    .hint,.angle-box,.btn-group,.result-card,.mini-card{
+      border-radius:18px;
+      padding:14px;
+      background:#f8fbff;
+      border:1px solid #e1ecf7;
+    }
+    .hint{
+      display:flex;
+      gap:10px;
+      align-items:center;
+      background:#f1efff;
+      font-size:clamp(15px,1.4vw,21px);
+      font-weight:600;
+      min-height:90px;
+    }
+    .hint .icon{font-size:40px}
+    .angle-box{
+      text-align:center;
+      background:#edf6ff;
+      font-size:clamp(30px,3.2vw,56px);
+      font-weight:700;
+      min-height:90px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+    }
+    .btn-group{
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:10px;
+      min-height:90px;
+      background:#f8fbff;
+    }
+    button{
+      border:none;
+      border-radius:16px;
+      background:#dcebff;
+      color:#355a86;
+      font-size:28px;
+      font-weight:700;
+      cursor:pointer;
+      box-shadow: inset 0 0 0 2px #bcd6f5;
+    }
+    button:hover{filter:brightness(.98)}
+    .side-panel{
+      display:flex;
+      flex-direction:column;
+      gap:16px;
+    }
+    .result-card{
+      background:#fffdf4;
+      border:2px solid #f0d582;
+      padding:18px;
+    }
+    .result-card h2,.mini-card h3{
+      margin:0 0 10px;
+      font-size:24px;
+    }
+    .val-row{
+      display:grid;
+      grid-template-columns:1fr auto;
+      gap:12px;
+      align-items:center;
+      padding:10px 0;
+      border-bottom:1px solid #eee7c4;
+      font-size:clamp(22px,2vw,34px);
+      font-weight:700;
+    }
+    .val-row:last-child{border-bottom:none}
+    .sin{color:var(--gold)}
+    .cos{color:var(--teal)}
+    .tan{color:var(--purple)}
+    .value{color:#1e2c38}
+    .mini-card{
+      background:#f8fbff;
+      font-size:18px;
+      line-height:1.6;
+    }
+    .mini-card ul{margin:6px 0 0 18px; padding:0}
+    .footer-note{
+      font-size:16px;
+      color:#516173;
+    }
+    .tag{
+      display:inline-block;
+      background:#e8f2ff;
+      border:1px solid #cde0ff;
+      border-radius:999px;
+      padding:4px 10px;
+      margin:2px 4px 2px 0;
+      font-size:14px;
+    }
+    @media (max-width: 920px){
+      .layout{grid-template-columns:1fr}
+      .controls{grid-template-columns:1fr}
+      .btn-group{grid-template-columns:1fr 1fr}
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="title">วงกลมหนึ่งหน่วย : ลากเส้นสีแดงเพื่อดูค่า <em>sin cos tan</em></div>
+
+    <div class="layout">
+      <div class="card">
+        <svg id="board" viewBox="0 0 760 760" aria-label="วงกลมหนึ่งหน่วยแบบโต้ตอบ">
+          <defs>
+            <marker id="arrowEnd" markerWidth="10" markerHeight="10" refX="8" refY="3.5" orient="auto">
+              <polygon points="0 0, 9 3.5, 0 7" fill="#4b5b6b"></polygon>
+            </marker>
+          </defs>
+          <rect x="0" y="0" width="760" height="760" fill="#ffffff" rx="16"></rect>
+          <g id="grid"></g>
+          <g id="staticMarks"></g>
+          <g id="dynamic"></g>
+        </svg>
+
+        <div class="controls">
+          <div class="hint"><div class="icon">☝️</div><div>ลากจุดสีแดงไปรอบวงกลม<br>เพื่อดูค่าตามมุมที่ต้องการ</div></div>
+          <div class="angle-box" id="angleBox">θ = 45.0°</div>
+          <div class="btn-group">
+            <button id="minusBtn" type="button">◀</button>
+            <button id="plusBtn" type="button">▶</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="side-panel">
+        <div class="result-card">
+          <h2>ค่าที่ได้จากมุมปัจจุบัน</h2>
+          <div class="val-row"><div class="sin">sin θ</div><div class="value" id="sinVal">0.7071</div></div>
+          <div class="val-row"><div class="cos">cos θ</div><div class="value" id="cosVal">0.7071</div></div>
+          <div class="val-row"><div class="tan">tan θ</div><div class="value" id="tanVal">1.0000</div></div>
+          <div class="val-row"><div>มุม (องศา)</div><div class="value" id="degVal">45.0°</div></div>
+          <div class="val-row"><div>มุม (เรเดียน)</div><div class="value" id="radVal">0.7854</div></div>
+        </div>
+
+        <div class="mini-card">
+          <h3>วิธีใช้</h3>
+          <ul>
+            <li>ลากจุดสีแดงบนวงกลมเพื่อเปลี่ยนมุม</li>
+            <li>ปุ่ม ◀ ▶ ใช้ปรับมุมทีละ 1°</li>
+            <li>ค่าจะแสดงเป็นทศนิยม 4 ตำแหน่งทันที</li>
+            <li>หาก tan ไม่มีค่า จะแสดงว่า <strong>ไม่กำหนด</strong></li>
+          </ul>
+        </div>
+
+        <div class="mini-card">
+          <h3>มุมน่าสนใจ</h3>
+          <div>
+            <span class="tag">30°</span>
+            <span class="tag">45°</span>
+            <span class="tag">60°</span>
+            <span class="tag">90°</span>
+            <span class="tag">120°</span>
+            <span class="tag">135°</span>
+            <span class="tag">150°</span>
+            <span class="tag">180°</span>
+            <span class="tag">225°</span>
+            <span class="tag">270°</span>
+            <span class="tag">300°</span>
+            <span class="tag">330°</span>
+          </div>
+          <p class="footer-note">ตัวอย่าง: 45° → sin = 0.7071, cos = 0.7071, tan = 1.0000</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const svg = document.getElementById('board');
+    const gridG = document.getElementById('grid');
+    const staticG = document.getElementById('staticMarks');
+    const dynamicG = document.getElementById('dynamic');
+
+    const angleBox = document.getElementById('angleBox');
+    const sinVal = document.getElementById('sinVal');
+    const cosVal = document.getElementById('cosVal');
+    const tanVal = document.getElementById('tanVal');
+    const degVal = document.getElementById('degVal');
+    const radVal = document.getElementById('radVal');
+    const plusBtn = document.getElementById('plusBtn');
+    const minusBtn = document.getElementById('minusBtn');
+
+    const CX = 380, CY = 350, R = 260;
+    let angleDeg = 45;
+    let dragging = false;
+
+    function svgEl(name, attrs={}){
+      const el = document.createElementNS('http://www.w3.org/2000/svg', name);
+      for(const [k,v] of Object.entries(attrs)) el.setAttribute(k, v);
+      return el;
+    }
+
+    function drawStatic(){
+      // Grid background guides
+      const axisStyle = {stroke:'#4b5b6b', 'stroke-width':2.5};
+      gridG.appendChild(svgEl('line', {x1:60,y1:350,x2:700,y2:350,...axisStyle,'marker-end':'url(#arrowEnd)'}));
+      gridG.appendChild(svgEl('line', {x1:380,y1:660,x2:380,y2:40,...axisStyle,'marker-end':'url(#arrowEnd)'}));
+      gridG.appendChild(svgEl('text', {x:710,y:368, 'font-size':28, 'font-style':'italic'})).textContent = 'x';
+      gridG.appendChild(svgEl('text', {x:372,y:28, 'font-size':28, 'font-style':'italic'})).textContent = 'y';
+
+      // Circle
+      gridG.appendChild(svgEl('circle', {cx:CX, cy:CY, r:R, fill:'none', stroke:'#808080', 'stroke-width':3}));
+
+      // Minor ticks every 10 degrees and major every 15 / 30
+      for(let a=0; a<360; a+=5){
+        const rad = a*Math.PI/180;
+        const isMajor = a%30===0;
+        const isMid = !isMajor && a%15===0;
+        const len = isMajor ? 16 : (isMid ? 10 : 5);
+        const x1 = CX + Math.cos(rad)*(R-len);
+        const y1 = CY - Math.sin(rad)*(R-len);
+        const x2 = CX + Math.cos(rad)*R;
+        const y2 = CY - Math.sin(rad)*R;
+        gridG.appendChild(svgEl('line', {
+          x1,y1,x2,y2,
+          stroke: isMajor ? '#222' : '#c6cfda',
+          'stroke-width': isMajor ? 2 : 1
+        }));
+      }
+
+      // Key labels and points
+      const keyAngles = [0,30,45,60,90,120,135,150,180,210,225,240,270,300,315,330];
+      const radLabels = {
+        0:'0', 30:'π/6', 45:'π/4', 60:'π/3', 90:'π/2', 120:'2π/3', 135:'3π/4', 150:'5π/6',
+        180:'π', 210:'7π/6', 225:'5π/4', 240:'4π/3', 270:'3π/2', 300:'5π/3', 315:'7π/4', 330:'11π/6'
+      };
+      keyAngles.forEach(a=>{
+        const rad = a*Math.PI/180;
+        const px = CX + Math.cos(rad)*R;
+        const py = CY - Math.sin(rad)*R;
+        staticG.appendChild(svgEl('circle', {cx:px, cy:py, r:5.5, fill:'#7d5cff', stroke:'#4527a0', 'stroke-width':1.5}));
+
+        const labelDist1 = R+26;
+        const labelDist2 = R+58;
+        const tx1 = CX + Math.cos(rad)*labelDist1;
+        const ty1 = CY - Math.sin(rad)*labelDist1;
+        const tx2 = CX + Math.cos(rad)*labelDist2;
+        const ty2 = CY - Math.sin(rad)*labelDist2;
+
+        const degText = svgEl('text', {x:tx1, y:ty1, 'font-size':17, 'text-anchor':'middle', 'dominant-baseline':'middle', fill:'#222'});
+        degText.textContent = a + '°';
+        staticG.appendChild(degText);
+
+        const radText = svgEl('text', {x:tx2, y:ty2, 'font-size':15, 'text-anchor':'middle', 'dominant-baseline':'middle', fill:'#111'});
+        radText.textContent = radLabels[a];
+        staticG.appendChild(radText);
+      });
+
+      // coordinate labels for unit circle values
+      const xVals = [0.5, Math.SQRT1_2, Math.sqrt(3)/2, 1, -0.5, -Math.SQRT1_2, -Math.sqrt(3)/2, -1];
+      const xNames = ['1/2','√2/2','√3/2','1','-1/2','-√2/2','-√3/2','-1'];
+      xVals.forEach((v,i)=>{
+        if (Math.abs(v)===1) return;
+        const x = CX + v*R;
+        gridG.appendChild(svgEl('circle',{cx:x, cy:CY, r:4.3, fill:'#10a6ff', stroke:'#2456d3', 'stroke-width':1}));
+        const t = svgEl('text',{x:x, y:CY+28, 'font-size':16, 'text-anchor':'middle', fill:'#111'});
+        t.textContent = xNames[i];
+        gridG.appendChild(t);
+      });
+      const yVals = [0.5, Math.SQRT1_2, Math.sqrt(3)/2, -0.5, -Math.SQRT1_2, -Math.sqrt(3)/2];
+      const yNames = ['1/2','√2/2','√3/2','-1/2','-√2/2','-√3/2'];
+      yVals.forEach((v,i)=>{
+        const y = CY - v*R;
+        gridG.appendChild(svgEl('circle',{cx:CX, cy:y, r:4.3, fill:'#10a6ff', stroke:'#2456d3', 'stroke-width':1}));
+        const t = svgEl('text',{x:CX-22, y:y+6, 'font-size':16, 'text-anchor':'end', fill:'#111'});
+        t.textContent = yNames[i];
+        gridG.appendChild(t);
+      });
+      const labels = [
+        {x:CX+R+10,y:CY+6,text:'1'},
+        {x:CX-R-18,y:CY+6,text:'-1'},
+        {x:CX-18,y:CY-R-8,text:'1'},
+        {x:CX-24,y:CY+R+24,text:'-1'}
+      ];
+      labels.forEach(o=>{
+        const t=svgEl('text',{x:o.x,y:o.y,'font-size':18,fill:'#111'});
+        t.textContent=o.text;
+        gridG.appendChild(t);
+      });
+    }
+
+    function normalize(deg){
+      deg = deg % 360;
+      if(deg < 0) deg += 360;
+      return deg;
+    }
+
+    function toFixedSafe(x){
+      if (Math.abs(x) < 0.0000005) x = 0;
+      return x.toFixed(4);
+    }
+
+    function polarPoint(deg, radius=R){
+      const rad = deg*Math.PI/180;
+      return {x: CX + Math.cos(rad)*radius, y: CY - Math.sin(rad)*radius};
+    }
+
+    function describeSector(startDeg, endDeg, radius){
+      let delta = normalize(endDeg - startDeg);
+      const start = polarPoint(startDeg, radius);
+      const end = polarPoint(endDeg, radius);
+      const largeArc = delta > 180 ? 1 : 0;
+      return `M ${CX} ${CY} L ${start.x} ${start.y} A ${radius} ${radius} 0 ${largeArc} 0 ${end.x} ${end.y} Z`;
+    }
+
+    function updateScene(){
+      dynamicG.innerHTML = '';
+
+      const p = polarPoint(angleDeg);
+      const rad = angleDeg*Math.PI/180;
+      const sin = Math.sin(rad);
+      const cos = Math.cos(rad);
+      let tanText;
+      if (Math.abs(cos) < 1e-6) tanText = 'ไม่กำหนด';
+      else tanText = toFixedSafe(Math.tan(rad));
+
+      // angle sector
+      dynamicG.appendChild(svgEl('path', {
+        d: describeSector(0, angleDeg, 72),
+        fill: '#f6dd6d',
+        opacity: '0.72'
+      }));
+
+      // dashed projections
+      dynamicG.appendChild(svgEl('line', {
+        x1:p.x, y1:p.y, x2:p.x, y2:CY,
+        stroke:'#198754', 'stroke-width':3, 'stroke-dasharray':'10 8'
+      }));
+      dynamicG.appendChild(svgEl('line', {
+        x1:p.x, y1:p.y, x2:CX, y2:p.y,
+        stroke:'#d4a017', 'stroke-width':3, 'stroke-dasharray':'10 8'
+      }));
+
+      // radius line
+      dynamicG.appendChild(svgEl('line', {
+        x1:CX,y1:CY,x2:p.x,y2:p.y,
+        stroke:'#e53935','stroke-width':5.5, 'stroke-linecap':'round'
+      }));
+
+      // handle outer and inner
+      dynamicG.appendChild(svgEl('circle', {cx:p.x, cy:p.y, r:13, fill:'#ffb0b0', opacity:'0.8'}));
+      dynamicG.appendChild(svgEl('circle', {cx:p.x, cy:p.y, r:9.5, fill:'#ff3b3b', stroke:'#ffffff', 'stroke-width':3, id:'handle'}));
+
+      // angle text inside sector
+      const mid = polarPoint(angleDeg/2, 105);
+      const angleText = svgEl('text', {x:mid.x, y:mid.y, 'font-size':18, 'font-weight':'700', 'text-anchor':'middle', fill:'#3b3b00'});
+      angleText.textContent = `${angleDeg.toFixed(1)}°`;
+      dynamicG.appendChild(angleText);
+
+      angleBox.textContent = `θ = ${angleDeg.toFixed(1)}°`;
+      sinVal.textContent = toFixedSafe(sin);
+      cosVal.textContent = toFixedSafe(cos);
+      tanVal.textContent = tanText;
+      degVal.textContent = `${angleDeg.toFixed(1)}°`;
+      radVal.textContent = toFixedSafe(rad);
+    }
+
+    function clientToSvg(clientX, clientY){
+      const pt = svg.createSVGPoint();
+      pt.x = clientX;
+      pt.y = clientY;
+      const transformed = pt.matrixTransform(svg.getScreenCTM().inverse());
+      return {x:transformed.x, y:transformed.y};
+    }
+
+    function setAngleFromPoint(x,y){
+      const dx = x - CX;
+      const dy = CY - y;
+      let deg = Math.atan2(dy, dx) * 180 / Math.PI;
+      deg = normalize(deg);
+      angleDeg = deg;
+      updateScene();
+    }
+
+    svg.addEventListener('pointerdown', e=>{
+      dragging = true;
+      svg.setPointerCapture(e.pointerId);
+      const p = clientToSvg(e.clientX, e.clientY);
+      setAngleFromPoint(p.x, p.y);
+    });
+    svg.addEventListener('pointermove', e=>{
+      if(!dragging) return;
+      const p = clientToSvg(e.clientX, e.clientY);
+      setAngleFromPoint(p.x, p.y);
+    });
+    svg.addEventListener('pointerup', e=>{dragging=false; try{svg.releasePointerCapture(e.pointerId)}catch(_){}});
+    svg.addEventListener('pointerleave', ()=>{});
+    svg.addEventListener('click', e=>{
+      const p = clientToSvg(e.clientX, e.clientY);
+      setAngleFromPoint(p.x, p.y);
+    });
+
+    plusBtn.addEventListener('click', ()=>{ angleDeg = normalize(angleDeg + 1); updateScene(); });
+    minusBtn.addEventListener('click', ()=>{ angleDeg = normalize(angleDeg - 1); updateScene(); });
+
+    window.addEventListener('keydown', e=>{
+      if(e.key === 'ArrowRight'){ angleDeg = normalize(angleDeg + 1); updateScene(); }
+      if(e.key === 'ArrowLeft'){ angleDeg = normalize(angleDeg - 1); updateScene(); }
+    });
+
+    drawStatic();
+    updateScene();
+  </script>
+</body>
+</html>
